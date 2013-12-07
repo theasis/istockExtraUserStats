@@ -3,13 +3,13 @@
 // @namespace      theasis
 // @match          http://*.istockphoto.com/user_view.php*
 // @match          https://*.istockphoto.com/user_view.php*
-// @version	   0.0.1
+// @version	   1.0.0
 // iStockPhoto greasemonkey script (c) Martin McCarthy 2013
 // ==/UserScript==
 // This script shows extra user stats on the user page
 //
-// 6 Dec 2013 Martin McCarthy
-// Initial version
+// 7 Dec 2013 Martin McCarthy
+// v1.0.0 First public release
 //
 
 function Ex(message) {
@@ -132,9 +132,17 @@ function main() {
 		if (row[0].substr(0,4)=="Max ") {
 			calculatedTotal=max.toFixed(2);
 		}
-		table.append(jQ("<tr><td colspan='12' class='c'><b>"+row[0]+"</b>&nbsp;:&nbsp;"+row[13]+" ("+calculatedTotal+")</td></tr>"));
+		var statText="<b>"+row[0]+"</b>&nbsp;:&nbsp;"+row[13];
+		if (row[13]!=calculatedTotal) statText += " ("+calculatedTotal+")";
+		table.append(jQ("<tr><td colspan='12' class='c'>"+statText+"</td></tr>"));
 		div.append(table);
 		return div;
+	};
+	
+	theasis_statsLoadFailed = function() {
+		jQ("#Info_Loading").css("display","none");
+		var extraStatsTab=jQ("<div id='Info_TheasisExtraStatsTab_Content'>Failed to load CSV file.</div>");
+		var button=jQ("<button>Retry</button>").click(function(){jQ("#Info_TheasisExtraStatsTab_Content").remove(); theasis_loadStats(-1)});
 	};
 	
 	theasis_statsLoaded = function(data,show_year) {
@@ -167,7 +175,17 @@ function main() {
 	
 	theasis_extraStatsOff = function() {
 		jQ("#TheasisExtraStatsTab").removeClass("tabContainer").addClass("tabContainerOff hand");
-		jQ("#Info_Loading").css("display","none");
+//		jQ("#Info_Loading").css("display","none");
+		jQ("#Info_TheasisExtraStatsTab_Content").css("display","none");
+	};
+	
+	theasis_loadStats = function(offset,year) {
+		jQ("#Info_Loading").css("display","block");
+		jQ.ajax({
+			url:"/stats_download.php?type=monthly&offset="+offset
+		})
+			.done(function(data){theasis_statsLoaded(data,year)})
+			.fail(theasis_statsLoadFailed);
 	};
 	
 	theasis_requestExtraStats = function(year) {
@@ -184,11 +202,7 @@ function main() {
 				var now=theasis_thisYear();
 				offset=(now-year)*12-1;
 			}
-			jQ("#Info_Loading").css("display","block");
-			jQ.ajax({
-				url:"/stats_download.php?type=monthly&offset="+offset,
-				success:function(data){theasis_statsLoaded(data,year)}
-			});
+			theasis_loadStats(offset,year);
 		}
 	};
 	
