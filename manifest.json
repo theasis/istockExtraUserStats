@@ -3,15 +3,15 @@
 
   "name": "iStock Extra User Stats",
   "description": "Show extra contributor stats on the iStockphoto user page.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   
   "icons": { 
           "128": "stats-icon-1.png" },
   "content_scripts": [ {
     "js": [ "jquery-1.10.2.min.js", "theasis_istock_extra_user_stats.user.js" ],
   "matches": [
-    "http://*.istockphoto.com/user_view.php*",
-    "https://*.istockphoto.com/user_view.php*"
+    "http://*.istockphoto.com/profile/*",
+    "https://*.istockphoto.com/profile/*"
 
   ] } ]
 }

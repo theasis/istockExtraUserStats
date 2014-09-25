@@ -1,15 +1,17 @@
 // ==UserScript==
 // @name           iStock Extra User Stats
 // @namespace      theasis
-// @match          http://*.istockphoto.com/user_view.php*
-// @match          https://*.istockphoto.com/user_view.php*
-// @version	   1.0.0
+// @match          http://*.istockphoto.com/profile/*
+// @match          https://*.istockphoto.com/profile/*
+// @version	   1.0.1
 // iStockPhoto greasemonkey script (c) Martin McCarthy 2013
 // ==/UserScript==
 // This script shows extra user stats on the user page
 //
 // 7 Dec 2013 Martin McCarthy
 // v1.0.0 First public release
+// 25 Sep 2014 Martin McCarthy
+// v1.0.1 URL change; work around the monthly csv bug that misses a column of per-month data
 //
 
 function Ex(message) {
@@ -149,13 +151,31 @@ function main() {
 		jQ("#Info_Loading").css("display","none");
 		var extraStatsTab=jQ("<div id='Info_TheasisExtraStatsTab_Content'></div>");
 		extraStatsTab.append(theasis_memberSince(show_year));
-		var r,c,year,row;
+		var r,c,year,row,i;
 		var stats=csvParse(data);
 		var table=[];
+		var statsBug=false;
+		var tmpRow; // working around the monthly csv stats bug
 		for(r=0; r<stats.length; ++r) {
 			var row=stats[r];
 			if (row.length>10) {
-				table.push(row);
+				console.log("row "+r+", length "+row.length);
+				if (row.length==36) {
+					statsBug=true;
+				}
+				if (statsBug && row.length==35) {
+					tmpRow=[];
+					for(i=0;i<16;++i) {
+						tmpRow[i]=row[i];
+					}
+					tmpRow[16]=0;
+					for(i=16;i<row.length;++i) {
+						tmpRow[i+1]=row[i];
+					}
+				} else {
+					tmpRow=row;
+				}
+				table.push(tmpRow);
 			}
 		}
 		for(c=1;c<table[0].length;++c) {
